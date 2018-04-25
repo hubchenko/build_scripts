@@ -4,7 +4,7 @@
 set -e
 
 java_args='-Xms512m -Xmx512m'
-foreman_host=''
+foreman_host='foremanhost.compute.amazonaws.com'
 foreman_auth_key=''
 foreman_auth_secret=''
 
@@ -30,26 +30,9 @@ wget -q https://deb.theforeman.org/pubkey.gpg -O- | apt-key add -
 apt-get update
 apt-get install -y foreman-installer
 apt-get install -y puppet-agent
-apt-get install -y puppet-server
+apt-get install -y puppetserver
 
 sed -i "s/^JAVA_ARGS=.*/JAVA_ARGS=\"$java_args\"/" /etc/default/puppetserver
-
-foreman-installer \
-  --no-enable-foreman \
-  --no-enable-foreman-cli \
-  --no-enable-foreman-plugin-bootdisk \
-  --no-enable-foreman-plugin-setup \
-  --enable-puppet \
-  --puppet-server-ca=True \
-  --puppet-server-foreman-url=https://$foreman_host \
-  --enable-foreman-proxy \
-  --foreman-proxy-puppetca=true \
-  --foreman-proxy-tftp=false \
-  --foreman-proxy-foreman-base-url=https://$foreman_host \
-  --foreman-proxy-trusted-hosts=$foreman_host \
-  --foreman-proxy-oauth-consumer-key=$foreman_auth_key \
-  --foreman-proxy-oauth-consumer-secret=$foreman_auth_secret
-
 
 #puppet labs developed modules
 /opt/puppetlabs/bin/puppet module install puppetlabs-windows --modulepath /etc/puppetlabs/code/modules
@@ -65,3 +48,22 @@ foreman-installer \
 #puppet forge approved modules
 /opt/puppetlabs/bin/puppet module install stankevich-python --modulepath /opt/puppetlabs/puppet/modules
 /opt/puppetlabs/bin/puppet module install maestrodev-wget --modulepath /opt/puppetlabs/puppet/modules
+
+foreman-installer \
+  --no-enable-foreman \
+  --no-enable-foreman-cli \
+  --no-enable-foreman-plugin-bootdisk \
+  --no-enable-foreman-plugin-setup \
+  --enable-puppet \
+  --puppet-server-ca=true \
+  --puppet-server-foreman-url=https://$foreman_host \
+  --enable-foreman-proxy \
+  --foreman-proxy-puppetca=true \
+  --foreman-proxy-tftp=false \
+  --foreman-proxy-foreman-base-url=https://$foreman_host \
+  --foreman-proxy-trusted-hosts=$foreman_host \
+  --foreman-proxy-oauth-consumer-key=$foreman_auth_key \
+  --foreman-proxy-oauth-consumer-secret=$foreman_auth_secret
+  # --puppet-server-puppetdb-host=puppetdb.example.com \
+  # --puppet-server-reports=foreman,puppetdb \
+  # --puppet-server-storeconfigs-backend=puppetdb
