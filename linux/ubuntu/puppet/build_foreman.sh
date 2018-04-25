@@ -1,7 +1,10 @@
 #!/bin/bash
 set -e
 
-public_fqdn='ec2-54-241-68-62.us-west-1.compute.amazonaws.com'
+foreman_db_host='foreman.somedatabaseendpoint.amazonaws.com'
+foreman_db_username='foreman'
+foreman_db_password=''
+foreman_db_name='postgresql'
 
 
 # run script only as root
@@ -10,17 +13,6 @@ if [ $(id -u) != 0 ]; then
     exit 1
 fi
 
-# set proxy, if needed
-#export http_proxy="http://>>proxyserver<<:911"
-#export https_proxy="https://>>proxyserver<<:911"
-
-#setting hostname
-sed -i "s/^127.0.0.1.*/127.0.0.1 $public_fqdn/" /etc/hosts
-sed -i "1s/.*/$public_fqdn/" /etc/hostname
-hostname $public_fqdn
-
-
-# install required packages
 cd /tmp
 wget https://apt.puppetlabs.com/puppetlabs-release-pc1-xenial.deb
 sudo dpkg -i puppetlabs-release-pc1-xenial.deb
@@ -30,9 +22,20 @@ echo "deb http://deb.theforeman.org/ plugins 1.16" >> /etc/apt/sources.list.d/fo
 apt-get -y install ca-certificates
 wget -q https://deb.theforeman.org/pubkey.gpg -O- | apt-key add -
 
-
 # install required packages
+apt-get update
 apt-get update
 apt-get install -y foreman-installer
 apt-get install -y puppet-agent
 
+
+foreman-installer \
+  --foreman-db-type=postgresql \
+  --foreman-db-manage=false \
+  --foreman-db-host=$foreman_db_host \
+  --foreman-db-database=$foreman_db_name  \
+  --foreman-db-username=$foreman_db_username   \
+  --foreman-db-password=$foreman_db_password  
+  --puppet-server=false \
+  --foreman-proxy-puppet=false \
+  --foreman-proxy-puppetca=false
